@@ -84,7 +84,7 @@ const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
 const runningOption = document.querySelector('#running');
 const cyclingOption = document.querySelector('#cycling');
-let editing = fase;
+let editing = false;
 
 // const run1 = new Running([39, -12], 5.2, 24, 178);
 // const cycling1 = new Cycling([39, -12], 27, 95, 523);
@@ -206,7 +206,6 @@ na koniec pobierany jest obiekt o danym id i zapisawny do zmiennej
 wartości wpisane do form nadpisują stare wartości obiektu.
 */
 
-
     const validInputs = (...inputs) =>
       inputs.every(inp => Number.isFinite(inp));
 
@@ -226,6 +225,7 @@ wartości wpisane do form nadpisują stare wartości obiektu.
      */
 
 
+
     // Get data from form
 
     // Check if data is valid
@@ -234,10 +234,10 @@ wartości wpisane do form nadpisują stare wartości obiektu.
     const duration = +inputDuration.value;
 
     if (editing === true) {
-
       if (type === 'running') {
         const cadence = +inputCadence.value;
-  
+
+        const workout = // FIXME: usatlić jak przyjąć workout taki sam jak został kliknięty
         /* usatlić jaki to workout  */
         if (
           !validInputs(distance, duration, cadence) ||
@@ -248,11 +248,11 @@ wartości wpisane do form nadpisują stare wartości obiektu.
         // workout = new Running([lat, lng], distance, duration, cadence);
         /* wcześniej w  */
       }
-  
+
       if (type === 'cycling') {
         const elevation =
           inputElevation.value === '' ? '' : +inputElevation.value;
-  
+
         if (
           !validInputs(distance, duration, elevation) ||
           !allPositive(distance, duration)
@@ -261,9 +261,8 @@ wartości wpisane do form nadpisują stare wartości obiektu.
         }
         // workout = new Cycling([lat, lng], distance, duration, elevation);
       }
-
-    } else {}
-
+    } else {
+    }
 
     const { lat, lng } = this.#mapEvent.latlng; // to było użyte jako pierwsze w "Adding marker on map" brane jest z obiektu przywołanego eventhandlerem this.#map.on()
     let workout;
@@ -461,13 +460,12 @@ wartości wpisane do form nadpisują stare wartości obiektu.
   }
 
   _addEditWorkoutBtn(e) {
-    
     const editBtn = e.target.closest('.editWorkoutBtn');
     const workoutEl = editBtn.closest('.workout');
 
     if (!editBtn) return;
     editing = true;
-    if ()
+
     // console.log(workoutEl);
     // console.log(editBtn);
     const workout = this.#workouts.find(
