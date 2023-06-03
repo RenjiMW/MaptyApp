@@ -77,11 +77,16 @@ a:visited {
   grid-template-columns: 1fr 1fr 1fr 1fr;
   gap: 0.75rem 1.5rem;
 }
+
 .workout--running {
   border-left: 5px solid var(--color-brand--2);
 }
 .workout--cycling {
   border-left: 5px solid var(--color-brand--1);
+}
+
+.workoutEditeing {
+  background-color: #3d7a8f;
 }
 
 .workout__title {

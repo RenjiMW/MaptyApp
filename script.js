@@ -29,11 +29,6 @@ class Workout {
 
     this.description = `${this.type[0].toUpperCase() + this.type.slice(1)}
      on ${months[this.date.getMonth()]} ${this.date.getDate()}`;
-    /* Description of this action just for me 
-    weź typ zamień jego pierwszą literą na
-    dużą a następnie dołącz do tego miesiąc z pośród tych zawartych w tablicy
-    pobierz dzień w zależności od
-    i dodaj do tego dzień> */
   }
 
   click() {
@@ -85,17 +80,14 @@ const inputElevation = document.querySelector('.form__input--elevation');
 const runningOption = document.querySelector('#running');
 const cyclingOption = document.querySelector('#cycling');
 let editing = false;
+let secondClick = 0;
+let currentWorkoutSelcted;
 
-// const run1 = new Running([39, -12], 5.2, 24, 178);
-// const cycling1 = new Cycling([39, -12], 27, 95, 523);
-// console.log(run1, cycling1);
-
-//////////////////////////////////
 // APPLICATION ARCHITECTURE
 class App {
   #map;
   #mapZoomLevel = 13;
-  #mapEvent;
+  #clickEvent;
   #workouts = []; // array containig coolection of data from workouts
 
   constructor() {
@@ -152,9 +144,9 @@ class App {
     }).addTo(this.#map);
 
     // Handling clicks on map
-    this.#map.on('click', this._showForm.bind(this));
+    this.#map.on('click', this._eventsWhenMapClicked.bind(this));
     /* Description just for me
-    To powoduje że metoda _showForm otrzymuje automatycznie argument który tutaj nazywamy mapE
+    To powoduje że metoda _showForm otrzymuje automatycznie argument który tutaj nazywamy clickE
     ten argument można zobaczyć po kliknięciu na mapę (aby odpalić eventhadler) i wpisaniu w konsolę
     to jest obiekt, kóry posiada między innymi właściwość latlng
     */
@@ -164,16 +156,27 @@ class App {
     });
   } // ----- END OF LOAD MAP ----
 
-  _showForm(mapE) {
-    this.#mapEvent = mapE;
+  _eventsWhenMapClicked(clickE) {
+    if (editing === true) form.firstChild.remove();
+    editing = false;
+    this._showForm(clickE);
+    this._removeEditSelection();
+  }
+
+  _showForm(clickE) {
+    this.#clickEvent = clickE;
+    console.log(clickE);
+    console.log(`Editing status: ${editing}`);
+
+    form.classList.remove('hidden');
+    inputDistance.focus();
+
     // Show forum
     /*  Logging to console
     console.log(
-      `You clicked on map, which fires _showForm() and accepts argument object #mapEvent`
+      `You clicked on map, which fires _showForm() and accepts argument object #clickEvent`
     );
-    console.log(mapE);*/
-    form.classList.remove('hidden');
-    inputDistance.focus();
+    console.log(clickE);*/
   }
 
   _hideForm() {
@@ -198,75 +201,31 @@ class App {
   _newWorkout(e) {
     e.preventDefault();
 
-    /*
-Zrobić tak że jeśli został wcześniej kliknięty editBtn to 
-a dany workout zostaje podświetlony lub zasłonięty prześwitującym obrazkiem klicza mechanicznego
-wyświetla się form
-na koniec pobierany jest obiekt o danym id i zapisawny do zmiennej
-wartości wpisane do form nadpisują stare wartości obiektu.
-*/
-
-    const validInputs = (...inputs) =>
-      inputs.every(inp => Number.isFinite(inp));
-
-    const allPositive = (...inputs) => inputs.every(inp => inp > 0);
-    // const notEmpty = (...inputs) => inputs.every(inp => inp === '');
-    /* bierze jakąś tablicę, i dla tej teblicy sprwaza po koleji każdy element
-    sprawdza czy element to dokładnie pusty string
-    jeśli każdy to pusty string to wtedy daje true
-    
-    dla elevation === "" nastąpi zamiana na 0 (przez + dla inputElevation.value)
-    dlatego trzeba w trakcie definicji zmiennej sprawdzić czy nie zosatł 
-    wpisany tam pusty string, a jeśli tak to wartości nie należy zmieniać na
-    liczbę czli 0 a zostawić "" :)
-
-    jeśli dodany zostanie warunek dla elevation, że jeśli jest ""
-    to NIE zamieniaj na number to działa bez notEmpty()
-     */
-
-
-
-    // Get data from form
-
-    // Check if data is valid
-    const type = inputType.value;
-    const distance = +inputDistance.value; // dodanie plusa na początki odrazu przekształci to na liczbę
-    const duration = +inputDuration.value;
-
-    if (editing === true) {
-      if (type === 'running') {
-        const cadence = +inputCadence.value;
-
-        const workout = // FIXME: usatlić jak przyjąć workout taki sam jak został kliknięty
-        /* usatlić jaki to workout  */
-        if (
-          !validInputs(distance, duration, cadence) ||
-          !allPositive(distance, duration, cadence)
-        ) {
-          return alert('Inputs have to be positive numbers');
-        }
-        // workout = new Running([lat, lng], distance, duration, cadence);
-        /* wcześniej w  */
-      }
-
-      if (type === 'cycling') {
-        const elevation =
-          inputElevation.value === '' ? '' : +inputElevation.value;
-
-        if (
-          !validInputs(distance, duration, elevation) ||
-          !allPositive(distance, duration)
-        ) {
-          return alert('Inputs have to be positive numbers');
-        }
-        // workout = new Cycling([lat, lng], distance, duration, elevation);
-      }
-    } else {
-    }
-
-    const { lat, lng } = this.#mapEvent.latlng; // to było użyte jako pierwsze w "Adding marker on map" brane jest z obiektu przywołanego eventhandlerem this.#map.on()
+    // Used variables
+    let lat;
+    let lng;
     let workout;
 
+    // Get data from form
+    const type = inputType.value;
+    const distance = +inputDistance.value;
+    const duration = +inputDuration.value;
+
+    // Declaration of checked conditions
+    const validInputs = (...inputs) =>
+      inputs.every(inp => Number.isFinite(inp));
+    const allPositive = (...inputs) => inputs.every(inp => inp > 0);
+
+    // Assigning coordinates depending on the activity (new training/editing of an existing one)
+    if (editing === false) {
+      lat = this.#clickEvent.latlng.lat;
+      lng = this.#clickEvent.latlng.lng;
+    } else if (editing === true) {
+      lat = this.#clickEvent.coords[0];
+      lng = this.#clickEvent.coords[1];
+    }
+
+    // Check if data is valid (for runninng type)
     if (type === 'running') {
       const cadence = +inputCadence.value;
 
@@ -276,14 +235,17 @@ wartości wpisane do form nadpisują stare wartości obiektu.
       ) {
         return alert('Inputs have to be positive numbers');
       }
-      workout = new Running([lat, lng], distance, duration, cadence);
-      /* Logging to console
-      console.log(
-        `You submitted the form which generates the workout object with fallowing data:`
-      );
-      console.log(workout);*/
+      if (editing === false) {
+        workout = new Running([lat, lng], distance, duration, cadence);
+      } else if (editing === true) {
+        workout = this.#workouts.find(work => work.id === this.#clickEvent.id);
+        workout.distance = distance;
+        workout.duration = duration;
+        workout.cadence = cadence;
+      }
     }
 
+    // Check if data is valid (for cycling type)
     if (type === 'cycling') {
       const elevation =
         inputElevation.value === '' ? '' : +inputElevation.value;
@@ -291,38 +253,95 @@ wartości wpisane do form nadpisują stare wartości obiektu.
       if (
         !validInputs(distance, duration, elevation) ||
         !allPositive(distance, duration)
-        // || notEmpty(elevation)
       ) {
         return alert('Inputs have to be positive numbers');
       }
-      workout = new Cycling([lat, lng], distance, duration, elevation);
-      /* Logging to console
-      console.log(
-        `You submitted the form which generates the workout object with fallowing data:`
-      );
-      console.log(workout);*/
+
+      if (editing === false) {
+        workout = new Cycling([lat, lng], distance, duration, elevation);
+      } else if (editing === true) {
+        workout = this.#workouts.find(work => work.id === this.#clickEvent.id);
+        workout.distance = distance;
+        workout.duration = duration;
+        workout.elevation = elevation;
+      }
     }
-    // Number() oraz isNaN() spacje lub puste stringi zawsze przerabia na 0
-    // czyli robi z nich liczbę.
 
-    // TODO: może by tak dodać przycisk powrotu z tworzenia trenigu?
+    if (editing === false) {
+      // adding new workout to array
+      this.#workouts.push(workout);
 
-    this.#workouts.push(workout); // ZAPAMIĘTAJ ŻE TO SIĘ TAK ROBI!!!!!!
+      // Adding marker on map after submiting the form
+      this._renderWorkoutMarker(workout);
 
-    // Adding marker on map after submiting the form
-    this._renderWorkoutMarker(workout);
+      // Render info about workout on the list
+      this._renderWorkout(workout);
+    }
 
-    // Render info about workout on the list
-    this._renderWorkout(workout);
+    // FIXME: zrobić tak żeby ta metoda aktywowała się z tej samej co zwykłe tworzenie workout
+    // FIXME: Zrobić tak żeby okna nie skakały po zatwierdzeniu
+    // FIXME: Zrobić tak żeby edytowane okno stopniowo powracała do tego samego koloru np 1.5 sec
+    if (editing === true) {
+      let wotkoutHTML =
+        // prettier-ignore
+        `<li class="workout workout--${workout.type}" data-id="${workout.id}">
+          <h2 class="workout__title">${workout.description}</h2>
+          <button class="editWorkoutBtn">Edit 🔧</button>
+          <div class="workout__details">
+            <span class="workout__icon">${(workout.type === 'running'? "🏃": "🚴‍♀️")}</span>
+            <span class="workout__value">${workout.distance}</span>
+            <span class="workout__unit">km</span>
+          </div>
+          <div class="workout__details">
+            <span class="workout__icon">⏱</span>
+            <span class="workout__value">${workout.duration}</span>
+            <span class="workout__unit">min</span>
+          </div>`;
+
+      // RUNNING
+      // prettier-ignore
+      if (workout.type === 'running') {
+      wotkoutHTML+=
+          `<div class="workout__details">
+            <span class="workout__icon">⚡️</span>
+            <span class="workout__value">${Math.round(workout.pace)}</span>
+            <span class="workout__unit">min/km</span>
+          </div>
+          <div class="workout__details">
+            <span class="workout__icon">🦶🏼</span>
+            <span class="workout__value">${workout.cadence}</span>
+            <span class="workout__unit">spm</span>
+          </div>
+        </li>`;
+        }
+
+      // CYCLING
+      // prettier-ignore
+      if (workout.type === 'cycling') {
+      wotkoutHTML+=
+          `<div class="workout__details">
+            <span class="workout__icon">⚡️</span>
+            <span class="workout__value">${Math.round(workout.speed)}</span>
+            <span class="workout__unit">km/h</span>
+          </div>
+          <div class="workout__details">
+            <span class="workout__icon">⛰</span>
+            <span class="workout__value">${workout.elevationGain}</span>
+            <span class="workout__unit">m</span>
+          </div>
+        </li>`;
+      }
+
+      const workoutToEdit = document.querySelector(`[data-id="${workout.id}"]`);
+      workoutToEdit.outerHTML = wotkoutHTML;
+    }
 
     // Form hideing after submitting the form
     this._hideForm();
 
     // Set local storage to all workouts
     this._setLocalStorage();
-
-    // Allow editeing
-    this._editWorkout();
+    editing = false;
   }
 
   // Adding marker on map after submiting the form
@@ -348,59 +367,58 @@ wartości wpisane do form nadpisują stare wartości obiektu.
     let wotkoutHTML =
       // prettier-ignore
       `<li class="workout workout--${workout.type}" data-id="${workout.id}">
-<h2 class="workout__title">${workout.description}</h2>
-
-<button class="editWorkoutBtn">Edit 🔧</button>
-
-<div class="workout__details">
-  <span class="workout__icon">${(workout.type === 'running'? "🏃": "🚴‍♀️")}</span>
-  <span class="workout__value">${workout.distance}</span>
-  <span class="workout__unit">km</span>
-</div>
-<div class="workout__details">
-  <span class="workout__icon">⏱</span>
-  <span class="workout__value">${workout.duration}</span>
-  <span class="workout__unit">min</span>
-</div>`;
+        <h2 class="workout__title">${workout.description}</h2>
+        <button class="editWorkoutBtn">Edit 🔧</button>
+        <div class="workout__details">
+          <span class="workout__icon">${(workout.type === 'running'? "🏃": "🚴‍♀️")}</span>
+          <span class="workout__value">${workout.distance}</span>
+          <span class="workout__unit">km</span>
+        </div>
+        <div class="workout__details">
+          <span class="workout__icon">⏱</span>
+          <span class="workout__value">${workout.duration}</span>
+          <span class="workout__unit">min</span>
+        </div>`;
 
     // RUNNING
     // prettier-ignore
     if (workout.type === 'running') {
-      wotkoutHTML+=`<div class="workout__details">
-<span class="workout__icon">⚡️</span>
-<span class="workout__value">${Math.round(workout.pace)}</span>
-<span class="workout__unit">min/km</span>
-</div>
-
-<div class="workout__details">
-<span class="workout__icon">🦶🏼</span>
-<span class="workout__value">${workout.cadence}</span>
-<span class="workout__unit">spm</span>
-</div>
-</li>`;}
+      wotkoutHTML+=
+        `<div class="workout__details">
+          <span class="workout__icon">⚡️</span>
+          <span class="workout__value">${Math.round(workout.pace)}</span>
+          <span class="workout__unit">min/km</span>
+        </div>
+        <div class="workout__details">
+          <span class="workout__icon">🦶🏼</span>
+          <span class="workout__value">${workout.cadence}</span>
+          <span class="workout__unit">spm</span>
+        </div>
+      </li>`;
+    }
 
     // CYCLING
     // prettier-ignore
     if (workout.type === 'cycling') {
-      wotkoutHTML+=`<div class="workout__details">
-<span class="workout__icon">⚡️</span>
-<span class="workout__value">${Math.round(workout.speed)}</span>
-<span class="workout__unit">km/h</span>
-</div>
-
-<div class="workout__details">
-<span class="workout__icon">⛰</span>
-<span class="workout__value">${workout.elevationGain}</span>
-<span class="workout__unit">m</span>
-</div>
-</li>`;
-}
+      wotkoutHTML+=
+        `<div class="workout__details">
+          <span class="workout__icon">⚡️</span>
+          <span class="workout__value">${Math.round(workout.speed)}</span>
+          <span class="workout__unit">km/h</span>
+        </div>
+        <div class="workout__details">
+          <span class="workout__icon">⛰</span>
+          <span class="workout__value">${workout.elevationGain}</span>
+          <span class="workout__unit">m</span>
+        </div>
+      </li>`;
+    }
 
     form.insertAdjacentHTML('afterend', wotkoutHTML);
   } // ---- END OF _renderWorkout ---
 
   _moveToPop(e) {
-    const workoutEl = e.target.closest('.workout'); //this is oposite of the querySelector
+    const workoutEl = e.target.closest('.workout'); //this allaws to check for the closest ancestor of klicked element
     /* 
     - tworzy zmienną do której przypisuje najbliższego przodka 
       klikniętego treningu o klasie workout (NIE workouts - bez "s"), czyli:
@@ -461,33 +479,63 @@ wartości wpisane do form nadpisują stare wartości obiektu.
 
   _addEditWorkoutBtn(e) {
     const editBtn = e.target.closest('.editWorkoutBtn');
-    const workoutEl = editBtn.closest('.workout');
+    const workoutEl = editBtn?.closest('.workout');
 
     if (!editBtn) return;
-    editing = true;
-
+    const editHTML = document.querySelector('.editText');
     // console.log(workoutEl);
     // console.log(editBtn);
     const workout = this.#workouts.find(
       work => work.id === workoutEl.dataset.id
     );
 
-    this._showForm();
-    /*
-    moja funkcja działa tylko po kliknięciu na editBtn i nigie indziej
-    następnie szuka najblżego elementu nadrzędnego z klasą .workout
-    następnie trzeba ten workout jakoś zmusić do edycji czyli
-    NADPISAĆ obiekt
-    1. Zrobić żeby w miejscu w którym jest ten workout pojawiło się to samo co w form 
-    2. Po zmianie danych zapisać jako poprzednie ID  
-    */
+    if (currentWorkoutSelcted === undefined) {
+      currentWorkoutSelcted = workout;
+      secondClick++;
+    } else if (currentWorkoutSelcted === workout && secondClick !== 2) {
+      secondClick++;
+    } else if (currentWorkoutSelcted !== workout) {
+      currentWorkoutSelcted = workout;
+      secondClick = 1;
+      editHTML?.remove();
+    }
+
+    if (secondClick < 2) {
+      editing = true;
+      // Allow editing
+      // remove 'workoutEditeing' class form all workouts from list
+      this._removeEditSelection();
+      // add to currently editeing workout
+      workoutEl.classList.add('workoutEditeing');
+      // show form and have currently editeing workout data in memory
+      this._showForm(workout);
+      this._editingText(workout);
+    } else {
+      // if (secondClick === 2): Switch off editing
+      this._removeEditSelection();
+      // delete form discription about editing
+      editHTML?.remove();
+      secondClick = 0;
+      editing = false;
+      this._hideForm();
+    }
+  }
+
+  _removeEditSelection() {
+    const allWorkouts = document.querySelectorAll('.workout');
+    allWorkouts.forEach(workout => workout.classList.remove('workoutEditeing'));
+  }
+
+  _editingText(workout) {
+    const htmlEditing = `<p class="editText" style="font-weight: bold; font-size: 1.3em; grid-column-start: 1;
+    grid-column-end: span 2;">Edite ${workout.description}</p>`;
+    form.style.height = 'unset';
+    form.style.minHeight = '9.25rem';
+    form.insertAdjacentHTML('afterbegin', htmlEditing);
   }
 }
 
 const app = new App();
 
-// TODO: musiłby być evenlistener na Cancel aby uktywać form
-
-// TODO: zrobić żeby mapa poruszała się do trenigu który jest wybrany z listy
-// wykorzystać dlegację wydarzenia (event delegation)
-// dodać eventListenra do workout
+// TODO: może by tak dodać przycisk powrotu z tworzenia trenigu?
+//  musiłby być evenlistener na Cancel aby uktywać form
