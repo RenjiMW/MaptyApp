@@ -273,68 +273,14 @@ class App {
 
       // Adding marker on map after submiting the form
       this._renderWorkoutMarker(workout);
-
-      // Render info about workout on the list
-      this._renderWorkout(workout);
     }
+
+    // Render info about workout on the list
+    this._renderWorkout(workout);
 
     // FIXME: zrobić tak żeby ta metoda aktywowała się z tej samej co zwykłe tworzenie workout
     // FIXME: Zrobić tak żeby okna nie skakały po zatwierdzeniu
     // FIXME: Zrobić tak żeby edytowane okno stopniowo powracała do tego samego koloru np 1.5 sec
-    if (editing === true) {
-      let wotkoutHTML =
-        // prettier-ignore
-        `<li class="workout workout--${workout.type}" data-id="${workout.id}">
-          <h2 class="workout__title">${workout.description}</h2>
-          <button class="editWorkoutBtn">Edit 🔧</button>
-          <div class="workout__details">
-            <span class="workout__icon">${(workout.type === 'running'? "🏃": "🚴‍♀️")}</span>
-            <span class="workout__value">${workout.distance}</span>
-            <span class="workout__unit">km</span>
-          </div>
-          <div class="workout__details">
-            <span class="workout__icon">⏱</span>
-            <span class="workout__value">${workout.duration}</span>
-            <span class="workout__unit">min</span>
-          </div>`;
-
-      // RUNNING
-      // prettier-ignore
-      if (workout.type === 'running') {
-      wotkoutHTML+=
-          `<div class="workout__details">
-            <span class="workout__icon">⚡️</span>
-            <span class="workout__value">${Math.round(workout.pace)}</span>
-            <span class="workout__unit">min/km</span>
-          </div>
-          <div class="workout__details">
-            <span class="workout__icon">🦶🏼</span>
-            <span class="workout__value">${workout.cadence}</span>
-            <span class="workout__unit">spm</span>
-          </div>
-        </li>`;
-        }
-
-      // CYCLING
-      // prettier-ignore
-      if (workout.type === 'cycling') {
-      wotkoutHTML+=
-          `<div class="workout__details">
-            <span class="workout__icon">⚡️</span>
-            <span class="workout__value">${Math.round(workout.speed)}</span>
-            <span class="workout__unit">km/h</span>
-          </div>
-          <div class="workout__details">
-            <span class="workout__icon">⛰</span>
-            <span class="workout__value">${workout.elevationGain}</span>
-            <span class="workout__unit">m</span>
-          </div>
-        </li>`;
-      }
-
-      const workoutToEdit = document.querySelector(`[data-id="${workout.id}"]`);
-      workoutToEdit.outerHTML = wotkoutHTML;
-    }
 
     // Form hideing after submitting the form
     this._hideForm();
@@ -414,7 +360,12 @@ class App {
       </li>`;
     }
 
-    form.insertAdjacentHTML('afterend', wotkoutHTML);
+    if (editing === false) {
+      form.insertAdjacentHTML('afterend', wotkoutHTML);
+    } else if (editing === true) {
+      const workoutToEdit = document.querySelector(`[data-id="${workout.id}"]`);
+      workoutToEdit.outerHTML = wotkoutHTML;
+    }
   } // ---- END OF _renderWorkout ---
 
   _moveToPop(e) {
