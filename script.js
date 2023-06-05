@@ -126,13 +126,6 @@ class App {
     const { latitude } = position.coords;
     const { longitude } = position.coords;
 
-    /* Loging to console
-    console.log(`Your position on map has been loaded with function _loadMap 
-    passed in to method _getPosition() when succesfully get perission to get data
-    _loadMap accepts an argument of position object, here is how it looks like: `);
-    console.log(position);
-    */
-
     const coords = [latitude, longitude];
 
     this.#map = L.map('map').setView(coords, this.#mapZoomLevel);
@@ -145,12 +138,6 @@ class App {
 
     // Handling clicks on map
     this.#map.on('click', this._eventsWhenMapClicked.bind(this));
-    /* Description just for me
-    To powoduje że metoda _showForm otrzymuje automatycznie argument który tutaj nazywamy clickE
-    ten argument można zobaczyć po kliknięciu na mapę (aby odpalić eventhadler) i wpisaniu w konsolę
-    to jest obiekt, kóry posiada między innymi właściwość latlng
-    */
-
     this.#workouts.forEach(work => {
       this._renderWorkoutMarker(work);
     });
@@ -170,13 +157,6 @@ class App {
 
     form.classList.remove('hidden');
     inputDistance.focus();
-
-    // Show forum
-    /*  Logging to console
-    console.log(
-      `You clicked on map, which fires _showForm() and accepts argument object #clickEvent`
-    );
-    console.log(clickE);*/
   }
 
   _hideForm() {
@@ -190,7 +170,7 @@ class App {
     // hide form
     form.style.display = 'none';
     form.classList.add('hidden');
-    setTimeout(() => (form.style.display = 'grid'), 1000);
+    setTimeout(() => (form.style.display = 'grid'), 1000); // problem jest taki że nie pojawia się nowy workout
   }
 
   _toggleElevationField() {
@@ -278,8 +258,9 @@ class App {
     // Render info about workout on the list
     this._renderWorkout(workout);
 
-    // FIXME: zrobić tak żeby ta metoda aktywowała się z tej samej co zwykłe tworzenie workout
     // FIXME: Zrobić tak żeby okna nie skakały po zatwierdzeniu
+    /*  okno po zatwoerdzeniu powinno dojechać do górnej krawędzi (tak jak pod odświerzeniu)
+     */
     // FIXME: Zrobić tak żeby edytowane okno stopniowo powracała do tego samego koloru np 1.5 sec
 
     // Form hideing after submitting the form
@@ -370,13 +351,6 @@ class App {
 
   _moveToPop(e) {
     const workoutEl = e.target.closest('.workout'); //this allaws to check for the closest ancestor of klicked element
-    /* 
-    - tworzy zmienną do której przypisuje najbliższego przodka 
-      klikniętego treningu o klasie workout (NIE workouts - bez "s"), czyli:
-      eventlistenr nasłuchuje kliknięcia w ul o klasie workouts i jeśłi takie było
-      oraz jeśli taki element posiada przodka o klasie workout (bez s) to wtedy
-      do zmiennej lokalnej workoutEl przypisywany jest ten element
-    */
     // console.log(workoutEl);
 
     if (!workoutEl) return;
@@ -385,23 +359,11 @@ class App {
     const workout = this.#workouts.find(
       work => work.id === workoutEl.dataset.id
     );
-    /*przypisuje do zmiennej workout funkcję przeszukania właściwości #workouts 
-    która zawiera tablicę obiektów workout, takiego elemetu, który zawiera cechę
-    id taką że workoutEL ma takie samo id 
-
-    dlaczego id === dataset.id 
-    elemtnty cechy #workout posiadają cechę id, 
-    natomiast elemnty DOM posiadają atrybut "data-id"
-    */
-    // console.log(workout);
 
     this.#map.setView(workout.coords, this.#mapZoomLevel, {
       animate: true,
       pan: { duration: 1 },
     });
-    /* this.#map zawiera obiekt który pochodzi z Feaflet API i 
-    dodaje on mapę w podanym elementcie DOM, tutaj poprostu 
-    dodajemy do niego odpowieni widok */
 
     // using the public interface
     // workout.click();
@@ -475,13 +437,13 @@ class App {
   _removeEditSelection() {
     const allWorkouts = document.querySelectorAll('.workout');
     allWorkouts.forEach(workout => workout.classList.remove('workoutEditeing'));
+    form.classList.remove('editing');
   }
 
   _editingText(workout) {
     const htmlEditing = `<p class="editText" style="font-weight: bold; font-size: 1.3em; grid-column-start: 1;
     grid-column-end: span 2;">Edite ${workout.description}</p>`;
-    form.style.height = 'unset';
-    form.style.minHeight = '9.25rem';
+    form.classList.add('editing');
     form.insertAdjacentHTML('afterbegin', htmlEditing);
   }
 }
@@ -490,3 +452,6 @@ const app = new App();
 
 // TODO: może by tak dodać przycisk powrotu z tworzenia trenigu?
 //  musiłby być evenlistener na Cancel aby uktywać form
+
+// - po edycji treningu i udanym zatwierdzeniu zmiany, w trakcie
+//   tworzenia nowego trenigu dodawany jest tekst o edycji do ankiety

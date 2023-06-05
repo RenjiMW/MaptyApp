@@ -141,6 +141,11 @@ a:visited {
   opacity: 0;
 }
 
+.form.editing {
+  height: 0;
+  min-height: 11rem;
+}
+
 .form__row {
   display: flex;
   align-items: center;
