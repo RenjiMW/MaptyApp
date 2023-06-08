@@ -144,16 +144,16 @@ class App {
   } // ----- END OF LOAD MAP ----
 
   _eventsWhenMapClicked(clickE) {
-    if (editing === true) form.firstChild.remove();
     editing = false;
+    secondClick = 0;
     this._showForm(clickE);
     this._removeEditSelection();
   }
 
   _showForm(clickE) {
     this.#clickEvent = clickE;
-    console.log(clickE);
-    console.log(`Editing status: ${editing}`);
+    // console.log(clickE);
+    // console.log(`Editing status: ${editing}`);
 
     form.classList.remove('hidden');
     inputDistance.focus();
@@ -203,6 +203,7 @@ class App {
     } else if (editing === true) {
       lat = this.#clickEvent.coords[0];
       lng = this.#clickEvent.coords[1];
+      secondClick = 0;
     }
 
     // Check if data is valid (for runninng type)
@@ -222,6 +223,8 @@ class App {
         workout.distance = distance;
         workout.duration = duration;
         workout.cadence = cadence;
+        workout.type = type;
+        console.log(workout);
       }
     }
 
@@ -244,6 +247,8 @@ class App {
         workout.distance = distance;
         workout.duration = duration;
         workout.elevation = elevation;
+        workout.type = type;
+        console.log(workout);
       }
     }
 
@@ -258,10 +263,8 @@ class App {
     // Render info about workout on the list
     this._renderWorkout(workout);
 
-    // FIXME: Zrobić tak żeby okna nie skakały po zatwierdzeniu
-    /*  okno po zatwoerdzeniu powinno dojechać do górnej krawędzi (tak jak pod odświerzeniu)
-     */
-    // FIXME: Zrobić tak żeby edytowane okno stopniowo powracała do tego samego koloru np 1.5 sec
+    // delete form discription about editing
+    this._removeEditSelection();
 
     // Form hideing after submitting the form
     this._hideForm();
@@ -295,7 +298,13 @@ class App {
       // prettier-ignore
       `<li class="workout workout--${workout.type}" data-id="${workout.id}">
         <h2 class="workout__title">${workout.description}</h2>
-        <button class="editWorkoutBtn">Edit 🔧</button>
+        <div class="dropdown">
+          <button class="dropbtn">Options</button>
+          <div class="dropdown-content">
+            <a class="editWorkoutBtn">Edit 🔧</a>
+            <a class="deleteBtn">Delete ❌</a>
+          </div>
+        </div>
         <div class="workout__details">
           <span class="workout__icon">${(workout.type === 'running'? "🏃": "🚴‍♀️")}</span>
           <span class="workout__value">${workout.distance}</span>
@@ -395,9 +404,7 @@ class App {
     const workoutEl = editBtn?.closest('.workout');
 
     if (!editBtn) return;
-    const editHTML = document.querySelector('.editText');
-    // console.log(workoutEl);
-    // console.log(editBtn);
+
     const workout = this.#workouts.find(
       work => work.id === workoutEl.dataset.id
     );
@@ -410,24 +417,23 @@ class App {
     } else if (currentWorkoutSelcted !== workout) {
       currentWorkoutSelcted = workout;
       secondClick = 1;
-      editHTML?.remove();
     }
 
     if (secondClick < 2) {
       editing = true;
       // Allow editing
-      // remove 'workoutEditeing' class form all workouts from list
+      // remove 'workoutEditeing' class form all workouts from list and remove editing description from form
       this._removeEditSelection();
-      // add to currently editeing workout
+      // add css style to currently editing workout
       workoutEl.classList.add('workoutEditeing');
       // show form and have currently editeing workout data in memory
       this._showForm(workout);
+      // add decsription to form and adjusting form height
       this._editingText(workout);
     } else {
       // if (secondClick === 2): Switch off editing
-      this._removeEditSelection();
       // delete form discription about editing
-      editHTML?.remove();
+      this._removeEditSelection();
       secondClick = 0;
       editing = false;
       this._hideForm();
@@ -436,8 +442,10 @@ class App {
 
   _removeEditSelection() {
     const allWorkouts = document.querySelectorAll('.workout');
+    const editHTML = document.querySelector('.editText');
     allWorkouts.forEach(workout => workout.classList.remove('workoutEditeing'));
-    form.classList.remove('editing');
+    form.classList.remove('editing'); // remove additional height setting
+    editHTML?.remove(); // remove editing description
   }
 
   _editingText(workout) {
@@ -449,9 +457,11 @@ class App {
 }
 
 const app = new App();
+// TODO:
+// - może zrobić tak żeby edytowane okno stopniowo powracała do tego samego koloru np 1.5 sec
+// - może by tak dodać przycisk powrotu z tworzenia trenigu?
+// - musiłby być evenlistener na Cancel aby uktywać form
 
-// TODO: może by tak dodać przycisk powrotu z tworzenia trenigu?
-//  musiłby być evenlistener na Cancel aby uktywać form
-
-// - po edycji treningu i udanym zatwierdzeniu zmiany, w trakcie
-//   tworzenia nowego trenigu dodawany jest tekst o edycji do ankiety
+// - jeśli zostanie edytowany typ treningu, to powinien się zmienić
+//   marker oraz kolor na liście oraz opis na liście
+// - w form dotyczącym edycji powinny pojawiać się stare wartośći
