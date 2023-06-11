@@ -77,8 +77,6 @@ const inputDistance = document.querySelector('.form__input--distance');
 const inputDuration = document.querySelector('.form__input--duration');
 const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
-const runningOption = document.querySelector('#running');
-const cyclingOption = document.querySelector('#cycling');
 let editing = false;
 let secondClick = 0;
 let currentWorkoutSelcted;
@@ -223,8 +221,15 @@ class App {
         workout.distance = distance;
         workout.duration = duration;
         workout.cadence = cadence;
+        workout.pace = duration / distance;
         workout.type = type;
-        console.log(workout);
+        workout.description = `${
+          workout.type[0].toUpperCase() +
+          workout.type.slice(1) +
+          workout.description.slice(7)
+        }`;
+        workout.elevationGain = undefined;
+        workout.speed = undefined;
       }
     }
 
@@ -246,9 +251,16 @@ class App {
         workout = this.#workouts.find(work => work.id === this.#clickEvent.id);
         workout.distance = distance;
         workout.duration = duration;
-        workout.elevation = elevation;
+        workout.elevationGain = elevation;
+        workout.speed = distance / (duration / 60);
         workout.type = type;
-        console.log(workout);
+        workout.description = `${
+          workout.type[0].toUpperCase() +
+          workout.type.slice(1) +
+          workout.description.slice(7)
+        }`;
+        workout.cadence = undefined;
+        workout.pace = undefined;
       }
     }
 
@@ -356,10 +368,12 @@ class App {
       const workoutToEdit = document.querySelector(`[data-id="${workout.id}"]`);
       workoutToEdit.outerHTML = wotkoutHTML;
     }
+
+    console.log(workout);
   } // ---- END OF _renderWorkout ---
 
   _moveToPop(e) {
-    const workoutEl = e.target.closest('.workout'); //this allaws to check for the closest ancestor of klicked element
+    const workoutEl = e.target.closest('.workout'); //this allows to check for the closest ancestor of klicked element
     // console.log(workoutEl);
 
     if (!workoutEl) return;
@@ -462,6 +476,8 @@ const app = new App();
 // - może by tak dodać przycisk powrotu z tworzenia trenigu?
 // - musiłby być evenlistener na Cancel aby uktywać form
 
+// FIXME:
 // - jeśli zostanie edytowany typ treningu, to powinien się zmienić
-//   marker oraz kolor na liście oraz opis na liście
+//   marker (kolor i opis)
 // - w form dotyczącym edycji powinny pojawiać się stare wartośći
+// - dodać możliwość usuwania trenignu
