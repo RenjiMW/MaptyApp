@@ -77,6 +77,7 @@ const inputDistance = document.querySelector('.form__input--distance');
 const inputDuration = document.querySelector('.form__input--duration');
 const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
+
 let editing = false;
 let secondClick = 0;
 let currentWorkoutSelcted;
@@ -87,6 +88,7 @@ class App {
   #mapZoomLevel = 13;
   #clickEvent;
   #workouts = []; // array containig coolection of data from workouts
+  #markersArray = [];
 
   constructor() {
     // Get user's position
@@ -103,10 +105,9 @@ class App {
     inputType.addEventListener('change', this._toggleElevationField);
 
     containerWorkouts.addEventListener('click', this._moveToPop.bind(this));
-    containerWorkouts.addEventListener(
-      'click',
-      this._addEditWorkoutBtn.bind(this)
-    );
+    // prettier-ignore
+    containerWorkouts.addEventListener('click', this._addEditWorkoutBtn.bind(this));
+    containerWorkouts.addEventListener('click', this._removeWorkout.bind(this));
   }
 
   _getPosition() {
@@ -139,7 +140,7 @@ class App {
     this.#workouts.forEach(work => {
       this._renderWorkoutMarker(work);
     });
-  } // ----- END OF LOAD MAP ----
+  } // ----- END OF _loadMap ----
 
   _eventsWhenMapClicked(clickE) {
     editing = false;
@@ -216,6 +217,8 @@ class App {
       }
       if (editing === false) {
         workout = new Running([lat, lng], distance, duration, cadence);
+        // adding new workout to array
+        this.#workouts.push(workout);
       } else if (editing === true) {
         workout = this.#workouts.find(work => work.id === this.#clickEvent.id);
         workout.distance = distance;
@@ -247,6 +250,8 @@ class App {
 
       if (editing === false) {
         workout = new Cycling([lat, lng], distance, duration, elevation);
+        // adding new workout to array
+        this.#workouts.push(workout);
       } else if (editing === true) {
         workout = this.#workouts.find(work => work.id === this.#clickEvent.id);
         workout.distance = distance;
@@ -264,13 +269,8 @@ class App {
       }
     }
 
-    if (editing === false) {
-      // adding new workout to array
-      this.#workouts.push(workout);
-
-      // Adding marker on map after submiting the form
-      this._renderWorkoutMarker(workout);
-    }
+    // Adding marker on map after submiting the form
+    this._renderWorkoutMarker(workout);
 
     // Render info about workout on the list
     this._renderWorkout(workout);
@@ -288,7 +288,7 @@ class App {
 
   // Adding marker on map after submiting the form
   _renderWorkoutMarker(workout) {
-    L.marker(workout.coords)
+    const marker = L.marker(workout.coords)
       .addTo(this.#map)
       .bindPopup(
         L.popup({
@@ -303,6 +303,17 @@ class App {
         `${workout.type === 'running' ? '🏃' : '🚴‍♀️'} ${workout.description}`
       )
       .openPopup();
+
+    // add new marker to markersArray
+    if (editing === false) this.#markersArray.push(marker);
+
+    // replace marker if currenty editing workout
+    if (editing === true) {
+      // remove marker from html
+      this.#markersArray[this._findWorkoutIndex(workout)].remove();
+      // replace marker object inside markersArray
+      this.#markersArray.splice(this._findWorkoutIndex(workout), 1, marker);
+    }
   }
 
   _renderWorkout(workout) {
@@ -368,8 +379,6 @@ class App {
       const workoutToEdit = document.querySelector(`[data-id="${workout.id}"]`);
       workoutToEdit.outerHTML = wotkoutHTML;
     }
-
-    console.log(workout);
   } // ---- END OF _renderWorkout ---
 
   _moveToPop(e) {
@@ -468,6 +477,36 @@ class App {
     form.classList.add('editing');
     form.insertAdjacentHTML('afterbegin', htmlEditing);
   }
+
+  _removeWorkout(e) {
+    const deleteBtn = e.target.closest('.deleteBtn');
+    const workoutEl = deleteBtn?.closest('.workout');
+
+    if (!deleteBtn) return;
+
+    // find a workout object that matches an item in the rendered list
+    const workout = this.#workouts.find(
+      work => work.id === workoutEl.dataset.id
+    );
+
+    // remove marker from html and markersArray
+    this.#markersArray[this._findWorkoutIndex(workout)].remove();
+    this.#markersArray.splice(this._findWorkoutIndex(workout), 1);
+
+    // remove workout from list
+    workoutEl.remove();
+
+    // remove workout from workouts array
+    this.#workouts.splice(this._findWorkoutIndex(workout), 1);
+
+    // delete workout from in local storage
+    this._setLocalStorage();
+  }
+
+  _findWorkoutIndex(workout) {
+    const indexOfWorkout = this.#workouts.indexOf(workout);
+    return indexOfWorkout;
+  }
 }
 
 const app = new App();
@@ -477,7 +516,17 @@ const app = new App();
 // - musiłby być evenlistener na Cancel aby uktywać form
 
 // FIXME:
+
+// 1. Można zbudować metodę indexOfWorkout() aby zdobywać index workoutu
+// 2. Można zbudować funkcję która skróci kod zastępywania workoutu
 // - jeśli zostanie edytowany typ treningu, to powinien się zmienić
 //   marker (kolor i opis)
 // - w form dotyczącym edycji powinny pojawiać się stare wartośći
 // - dodać możliwość usuwania trenignu
+
+/* 
+po edycji treningu pojawia się problem ze skasowaniem markera
+gdy edycja runding -> runging || cycilng || cycling
+runinning - > cycling = zostaje cycling (tylko ostatnij) i tak samo ostatnii
+robione jest usuń z listy, usuń z tablicy, załaduj do schowka tylko coś się zmienia po edycji że nie usuwa ostaniego markera
+*/
