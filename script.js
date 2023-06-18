@@ -511,22 +511,7 @@ class App {
 
 const app = new App();
 // TODO:
-// - może zrobić tak żeby edytowane okno stopniowo powracała do tego samego koloru np 1.5 sec
-// - może by tak dodać przycisk powrotu z tworzenia trenigu?
-// - musiłby być evenlistener na Cancel aby uktywać form
-
-// FIXME:
-
-// 1. Można zbudować metodę indexOfWorkout() aby zdobywać index workoutu
-// 2. Można zbudować funkcję która skróci kod zastępywania workoutu
-// - jeśli zostanie edytowany typ treningu, to powinien się zmienić
-//   marker (kolor i opis)
+// - zrobić tak żeby edytowane okno stopniowo powracała do tego samego koloru np 1.5 sec
+// - dodać przycisk anluwoania tworzenia trenigu
+// - zbudować funkcję która skróci kod zastępywania workoutu
 // - w form dotyczącym edycji powinny pojawiać się stare wartośći
-// - dodać możliwość usuwania trenignu
-
-/* 
-po edycji treningu pojawia się problem ze skasowaniem markera
-gdy edycja runding -> runging || cycilng || cycling
-runinning - > cycling = zostaje cycling (tylko ostatnij) i tak samo ostatnii
-robione jest usuń z listy, usuń z tablicy, załaduj do schowka tylko coś się zmienia po edycji że nie usuwa ostaniego markera
-*/
