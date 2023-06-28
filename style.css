@@ -287,3 +287,21 @@ a:visited {
 .dropdown:hover .dropbtn {
   background-color: #3e8e41;
 }
+
+.side-parent {
+  position: relative;
+}
+
+.side-child {
+  display: none;
+  position: absolute;
+  background-color: #f1f1f1;
+  min-width: 130px;
+  top: 0px;
+  right: 100%;
+}
+
+/* hover */
+.side-parent:hover .side-child {
+  display: block;
+}

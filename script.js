@@ -108,6 +108,8 @@ class App {
     // prettier-ignore
     containerWorkouts.addEventListener('click', this._addEditWorkoutBtn.bind(this));
     containerWorkouts.addEventListener('click', this._removeWorkout.bind(this));
+    containerWorkouts.addEventListener('click', this._removeAll.bind(this));
+    containerWorkouts.addEventListener('click', this._sort.bind(this));
   }
 
   _getPosition() {
@@ -288,7 +290,7 @@ class App {
 
   // Adding marker on map after submiting the form
   _renderWorkoutMarker(workout) {
-    const marker = L.marker(workout.coords)
+    let marker = L.marker(workout.coords)
       .addTo(this.#map)
       .bindPopup(
         L.popup({
@@ -304,15 +306,28 @@ class App {
       )
       .openPopup();
 
+    // add "id" property because we will sort workouts
+    // so index in workouts array is insufficient for this operation
+    marker.id = `${workout.id}`;
+
     // add new marker to markersArray
     if (editing === false) this.#markersArray.push(marker);
 
-    // replace marker if currenty editing workout
+    // replace workout marker if currenty editing workout
     if (editing === true) {
+      // find marker to replace by id
+      // because index of workout in array could have been changed by sorting
+      const markerToReplace = this.#markersArray.find(
+        mark => mark.id === marker.id
+      );
+      // find index of this specific marker
+      const markerIndex = this.#markersArray.indexOf(markerToReplace);
+
       // remove marker from html
-      this.#markersArray[this._findWorkoutIndex(workout)].remove();
+      markerToReplace.remove();
+
       // replace marker object inside markersArray
-      this.#markersArray.splice(this._findWorkoutIndex(workout), 1, marker);
+      this.#markersArray.splice(markerIndex, 1, marker);
     }
   }
 
@@ -321,13 +336,27 @@ class App {
       // prettier-ignore
       `<li class="workout workout--${workout.type}" data-id="${workout.id}">
         <h2 class="workout__title">${workout.description}</h2>
+
+
         <div class="dropdown">
           <button class="dropbtn">Options</button>
           <div class="dropdown-content">
             <a class="editWorkoutBtn">Edit 🔧</a>
             <a class="deleteBtn">Delete ❌</a>
+            <a class="deleteAllBtn">Delete All 🔥</a>
+            <div class="side-parent">
+              <a class="sortBtn ">Sort 📚</a> 
+              <div class="side-child">
+                <a class="distanceBtn">by distance 🗺</a>
+                <a class="durationBtn">by duration ⏱</a>
+                <a class="typeBtn"> by type 😎</a>
+              </div>
+            </div>
           </div>
         </div>
+
+
+
         <div class="workout__details">
           <span class="workout__icon">${(workout.type === 'running'? "🏃": "🚴‍♀️")}</span>
           <span class="workout__value">${workout.distance}</span>
@@ -407,11 +436,37 @@ class App {
 
   _getLocalStorage() {
     const data = JSON.parse(localStorage.getItem('workouts'));
-    // console.log(data);
 
     if (!data) return;
 
-    this.#workouts = data;
+    let workoutsTemp = [];
+    let workout;
+
+    for (const work of data) {
+      //  console.log(work);
+      if (work.type === 'running') {
+        workout = new Running(
+          work.coords,
+          work.distance,
+          work.duration,
+          work.cadence
+        );
+      }
+      if (work.type === 'cycling') {
+        workout = new Cycling(
+          work.coords,
+          work.distance,
+          work.duration,
+          work.elevationGain
+        );
+      }
+      workout.id = work.id;
+      const dateOfWorkout = new Date(`${work.date}`);
+      workout.date = dateOfWorkout;
+      workoutsTemp.push(workout);
+    }
+
+    this.#workouts = workoutsTemp;
     this.#workouts.forEach(work => {
       this._renderWorkout(work);
     });
@@ -499,7 +554,7 @@ class App {
     // remove workout from workouts array
     this.#workouts.splice(this._findWorkoutIndex(workout), 1);
 
-    // delete workout from in local storage
+    // delete workout from local storage
     this._setLocalStorage();
   }
 
@@ -507,7 +562,95 @@ class App {
     const indexOfWorkout = this.#workouts.indexOf(workout);
     return indexOfWorkout;
   }
+
+  _removeAll(e) {
+    // set a variable with element which was the target of clicking and had 'deleteAllBtn' class,
+    const deleteAllBtn = e.target.closest('.deleteAllBtn');
+
+    if (!deleteAllBtn) return;
+
+    // clear #workouts array
+    this.#workouts = [];
+
+    // clear localStorage
+    localStorage.clear();
+
+    // clear HTML workouts list and markers
+    const workoutsQty = containerWorkouts.children.length;
+    for (let i = workoutsQty - 1; i > 0; i--) {
+      containerWorkouts.children[i].remove();
+      this.#markersArray[i - 1].remove();
+    }
+
+    // clear markersArray
+    this.#markersArray = [];
+  }
+
+  _sort(e) {
+    const distanceBtn = e.target.closest('.distanceBtn');
+    const durationBtn = e.target.closest('.durationBtn');
+    const typeBtn = e.target.closest('.typeBtn');
+
+    // FIXME: występuje jakiś błąd i zaczynają się pojawiać podwójne markery i znikają z innych miejsc
+
+    if (!distanceBtn & !durationBtn & !typeBtn) return;
+    console.log("Sorting by distance is currently 'being developed'");
+
+    this.#workouts.sort(compare);
+
+    function compare(a, b) {
+      if (distanceBtn) {
+        return a.distance - b.distance;
+      }
+      if (durationBtn) {
+        return a.duration - b.duration;
+      }
+      if (typeBtn) {
+        if (a.type < b.type) {
+          return -1;
+        }
+        if (a.type > b.type) {
+          return 1;
+        }
+        return 0;
+      }
+    }
+
+    console.log(this.#workouts);
+    // Nadawanie atrybutu zawierającego index treningu
+    for (let i = 0; i < this.#workouts.length; i++) {
+      //  deklaruję zmienną zawierającą pierwszy trening od góry (i następne)
+      const workoutEl = containerWorkouts.children[i + 1];
+
+      //  deklaruję zmienną zawierającą trening z tablcy obiektów odpowiadający workoutowi na liście
+      const workout = this.#workouts.find(
+        work => work.id === workoutEl.dataset.id
+      );
+
+      // nadaję dodatkowy atrybut treningowi na liście html (taki jak index w nowej tablicy)
+      workoutEl.dataset.workoutIndex = `${this._findWorkoutIndex(workout)}`;
+      // if (i === 1) return;
+    }
+
+    // Układanie listy treninguw w HTML
+    // pętla gdzie element[i] musi iść na początek listy po ankiecie (form)
+    for (let i = 0; i < this.#workouts.length; i++) {
+      // deklaruję zmienną zawierającą trening na liście HTML
+      // zawierający index workoutu z tablicy obiektów
+      const workoutEl = document.querySelector(`[data-workout-index="${i}"]`);
+
+      // wstawiam trenieng z listy po pierwszym potomku listy
+      containerWorkouts.children[0].after(workoutEl);
+    }
+
+    // TODO: To działa ale można zrobić opcję od najmniejszego do największego
+    // - można po kilknęciu na sort (bez wybrania sposobu) doać alert żeby dokonać wyboru
+    // - możba dodać po najechaniu na type aby sortował po specyficznych parametrach
+    // pace/speed || cadence/elevation
+  }
 }
+
+// TODO: Zapisać w tym stanie i pokzazać na Udemy, i zrobić wersję z przebudowanym workoutem
 
 const app = new App();
 // TODO:
@@ -515,3 +658,9 @@ const app = new App();
 // - dodać przycisk anluwoania tworzenia trenigu
 // - zbudować funkcję która skróci kod zastępywania workoutu
 // - w form dotyczącym edycji powinny pojawiać się stare wartośći
+// 👉 Ability to edit a workout ✅;
+// 👉 Ability to delete a workout ✅;
+// 👉 Ability to delete all workouts ✅;
+// 👉 Ability to sort workouts by a certain field (e.g. distance) ✅;
+// 👉 Re-build Running and Cycling objects coming from Local Storage ✅;
+// 👉 More realistic error and confirmation messages;
