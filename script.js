@@ -207,6 +207,21 @@ class App {
       secondClick = 0;
     }
 
+    // function used later for replace workout
+    // TODO: to chyba można zamienić przy użyciu bind/
+    const replaceWorkout = workout => {
+      // find old workout and assign it to variable + use old id and time for new workout
+      console.log(this);
+      const workoutOld = this.#workouts.find(
+        work => work.id === this.#clickEvent.id
+      );
+      workout.id = workoutOld.id;
+      const dateOfWorkout = new Date(`${workoutOld.date}`);
+      workout.date = dateOfWorkout;
+      // replace old workout with new (edited) workout
+      this.#workouts.splice(this.#workouts.indexOf(workoutOld), 1, workout);
+    };
+
     // Check if data is valid (for runninng type)
     if (type === 'running') {
       const cadence = +inputCadence.value;
@@ -217,24 +232,14 @@ class App {
       ) {
         return alert('Inputs have to be positive numbers');
       }
+
+      workout = new Running([lat, lng], distance, duration, cadence);
       if (editing === false) {
-        workout = new Running([lat, lng], distance, duration, cadence);
         // adding new workout to array
         this.#workouts.push(workout);
       } else if (editing === true) {
-        workout = this.#workouts.find(work => work.id === this.#clickEvent.id);
-        workout.distance = distance;
-        workout.duration = duration;
-        workout.cadence = cadence;
-        workout.pace = duration / distance;
-        workout.type = type;
-        workout.description = `${
-          workout.type[0].toUpperCase() +
-          workout.type.slice(1) +
-          workout.description.slice(7)
-        }`;
-        workout.elevationGain = undefined;
-        workout.speed = undefined;
+        // find old workout and assign it to variable + use old id and time for new workout
+        replaceWorkout(workout);
       }
     }
 
@@ -249,25 +254,12 @@ class App {
       ) {
         return alert('Inputs have to be positive numbers');
       }
-
+      workout = new Cycling([lat, lng], distance, duration, elevation);
       if (editing === false) {
-        workout = new Cycling([lat, lng], distance, duration, elevation);
         // adding new workout to array
         this.#workouts.push(workout);
       } else if (editing === true) {
-        workout = this.#workouts.find(work => work.id === this.#clickEvent.id);
-        workout.distance = distance;
-        workout.duration = duration;
-        workout.elevationGain = elevation;
-        workout.speed = distance / (duration / 60);
-        workout.type = type;
-        workout.description = `${
-          workout.type[0].toUpperCase() +
-          workout.type.slice(1) +
-          workout.description.slice(7)
-        }`;
-        workout.cadence = undefined;
-        workout.pace = undefined;
+        replaceWorkout(workout);
       }
     }
 
