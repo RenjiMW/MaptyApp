@@ -77,6 +77,8 @@ const inputDistance = document.querySelector('.form__input--distance');
 const inputDuration = document.querySelector('.form__input--duration');
 const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
+const modal = document.querySelector('.modal');
+const modalBtn = document.querySelector('.closeModalBtn');
 
 let editing = false;
 let secondClick = 0;
@@ -110,6 +112,7 @@ class App {
     containerWorkouts.addEventListener('click', this._removeWorkout.bind(this));
     containerWorkouts.addEventListener('click', this._removeAll.bind(this));
     containerWorkouts.addEventListener('click', this._sort.bind(this));
+    modalBtn.addEventListener('click', this._closeModal);
   }
 
   _getPosition() {
@@ -177,6 +180,14 @@ class App {
     inputCadence.closest('.form__row').classList.toggle('form__row--hidden');
   }
 
+  _showModal() {
+    modal.style.display = 'block';
+  }
+
+  _closeModal() {
+    modal.style.display = 'none';
+  }
+
   _newWorkout(e) {
     e.preventDefault();
 
@@ -226,7 +237,8 @@ class App {
         !validInputs(distance, duration, cadence) ||
         !allPositive(distance, duration, cadence)
       ) {
-        return alert('Inputs have to be positive numbers');
+        this._showModal();
+        return; // alert('Inputs have to be positive numbers');
       }
 
       workout = new Running([lat, lng], distance, duration, cadence);
@@ -248,7 +260,8 @@ class App {
         !validInputs(distance, duration, elevation) ||
         !allPositive(distance, duration)
       ) {
-        return alert('Inputs have to be positive numbers');
+        this._showModal();
+        return; //alert('Inputs have to be positive numbers');
       }
       workout = new Cycling([lat, lng], distance, duration, elevation);
       if (editing === false) {
