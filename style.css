@@ -308,19 +308,18 @@ a:visited {
 
 /* ==== MODAL ====*/
 .modal {
+  display: none;
   position: absolute;
-  text-align: center;
-  height: auto;
   z-index: 410;
   left: 50%;
   top: 50%;
   background-color: orange;
+  text-align: center;
   color: black;
   font-size: 2em;
   font-weight: bold;
   border: solid 2px black;
   padding: 10px;
-  display: none;
 }
 
 .closeModalBtn {
