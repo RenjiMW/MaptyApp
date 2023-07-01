@@ -142,7 +142,7 @@ class App {
     this.#workouts.forEach(work => {
       this._renderWorkoutMarker(work);
     });
-  } // ----- END OF _loadMap ----
+  }
 
   _eventsWhenMapClicked(clickE) {
     editing = false;
@@ -153,8 +153,6 @@ class App {
 
   _showForm(clickE) {
     this.#clickEvent = clickE;
-    // console.log(clickE);
-    // console.log(`Editing status: ${editing}`);
 
     form.classList.remove('hidden');
     inputDistance.focus();
@@ -171,7 +169,7 @@ class App {
     // hide form
     form.style.display = 'none';
     form.classList.add('hidden');
-    setTimeout(() => (form.style.display = 'grid'), 1000); // problem jest taki że nie pojawia się nowy workout
+    setTimeout(() => (form.style.display = 'grid'), 1000);
   }
 
   _toggleElevationField() {
@@ -186,6 +184,19 @@ class App {
     let lat;
     let lng;
     let workout;
+
+    // function used later for replace workout when edited
+    const replaceWorkout = workout => {
+      // find old workout and assign it to variable + use old id and time for new workout
+      const workoutOld = this.#workouts.find(
+        work => work.id === this.#clickEvent.id
+      );
+      workout.id = workoutOld.id;
+      const dateOfWorkout = new Date(`${workoutOld.date}`);
+      workout.date = dateOfWorkout;
+      // replace old workout with new (edited) workout
+      this.#workouts.splice(this.#workouts.indexOf(workoutOld), 1, workout);
+    };
 
     // Get data from form
     const type = inputType.value;
@@ -206,21 +217,6 @@ class App {
       lng = this.#clickEvent.coords[1];
       secondClick = 0;
     }
-
-    // function used later for replace workout
-    // TODO: to chyba można zamienić przy użyciu bind/
-    const replaceWorkout = workout => {
-      // find old workout and assign it to variable + use old id and time for new workout
-      console.log(this);
-      const workoutOld = this.#workouts.find(
-        work => work.id === this.#clickEvent.id
-      );
-      workout.id = workoutOld.id;
-      const dateOfWorkout = new Date(`${workoutOld.date}`);
-      workout.date = dateOfWorkout;
-      // replace old workout with new (edited) workout
-      this.#workouts.splice(this.#workouts.indexOf(workoutOld), 1, workout);
-    };
 
     // Check if data is valid (for runninng type)
     if (type === 'running') {
@@ -403,11 +399,10 @@ class App {
   } // ---- END OF _renderWorkout ---
 
   _moveToPop(e) {
-    const workoutEl = e.target.closest('.workout'); //this allows to check for the closest ancestor of klicked element
+    const workoutEl = e.target.closest('.workout');
     // console.log(workoutEl);
 
     if (!workoutEl) return;
-    // jeśli nie ma takiego przodka to zakończ funkcję
 
     const workout = this.#workouts.find(
       work => work.id === workoutEl.dataset.id
@@ -417,9 +412,6 @@ class App {
       animate: true,
       pan: { duration: 1 },
     });
-
-    // using the public interface
-    // workout.click();
   }
 
   _setLocalStorage() {
@@ -435,7 +427,6 @@ class App {
     let workout;
 
     for (const work of data) {
-      //  console.log(work);
       if (work.type === 'running') {
         workout = new Running(
           work.coords,
@@ -583,8 +574,6 @@ class App {
     const durationBtn = e.target.closest('.durationBtn');
     const typeBtn = e.target.closest('.typeBtn');
 
-    // FIXME: występuje jakiś błąd i zaczynają się pojawiać podwójne markery i znikają z innych miejsc
-
     if (!distanceBtn & !durationBtn & !typeBtn) return;
     console.log("Sorting by distance is currently 'being developed'");
 
@@ -608,51 +597,21 @@ class App {
       }
     }
 
-    console.log(this.#workouts);
-    // Nadawanie atrybutu zawierającego index treningu
+    // assigning an attribute containing the workout index
     for (let i = 0; i < this.#workouts.length; i++) {
-      //  deklaruję zmienną zawierającą pierwszy trening od góry (i następne)
       const workoutEl = containerWorkouts.children[i + 1];
-
-      //  deklaruję zmienną zawierającą trening z tablcy obiektów odpowiadający workoutowi na liście
       const workout = this.#workouts.find(
         work => work.id === workoutEl.dataset.id
       );
-
-      // nadaję dodatkowy atrybut treningowi na liście html (taki jak index w nowej tablicy)
       workoutEl.dataset.workoutIndex = `${this._findWorkoutIndex(workout)}`;
-      // if (i === 1) return;
     }
 
-    // Układanie listy treninguw w HTML
-    // pętla gdzie element[i] musi iść na początek listy po ankiecie (form)
+    // Arranging the list of trainings in HTML according to the new index
     for (let i = 0; i < this.#workouts.length; i++) {
-      // deklaruję zmienną zawierającą trening na liście HTML
-      // zawierający index workoutu z tablicy obiektów
       const workoutEl = document.querySelector(`[data-workout-index="${i}"]`);
-
-      // wstawiam trenieng z listy po pierwszym potomku listy
       containerWorkouts.children[0].after(workoutEl);
     }
-
-    // TODO: To działa ale można zrobić opcję od najmniejszego do największego
-    // - można po kilknęciu na sort (bez wybrania sposobu) doać alert żeby dokonać wyboru
-    // - możba dodać po najechaniu na type aby sortował po specyficznych parametrach
-    // pace/speed || cadence/elevation
   }
 }
 
-// TODO: Zapisać w tym stanie i pokzazać na Udemy, i zrobić wersję z przebudowanym workoutem
-
 const app = new App();
-// TODO:
-// - zrobić tak żeby edytowane okno stopniowo powracała do tego samego koloru np 1.5 sec
-// - dodać przycisk anluwoania tworzenia trenigu
-// - zbudować funkcję która skróci kod zastępywania workoutu
-// - w form dotyczącym edycji powinny pojawiać się stare wartośći
-// 👉 Ability to edit a workout ✅;
-// 👉 Ability to delete a workout ✅;
-// 👉 Ability to delete all workouts ✅;
-// 👉 Ability to sort workouts by a certain field (e.g. distance) ✅;
-// 👉 Re-build Running and Cycling objects coming from Local Storage ✅;
-// 👉 More realistic error and confirmation messages;
