@@ -1,7 +1,7 @@
 # MaptyApp
 
-Application built on a JS course and than add some freatures by myself.
-Features added were recomended by course as a lerning chalnage, but with out guide how to implement them.
+Application built on a JS course and than add some features by myself. 
+Features added were recommended by course as a learning challenge, but with out guide how to implement them.
 
 **Features coded by me as a learning challenge**
 - Ability to edit a workout
@@ -12,5 +12,5 @@ Features added were recomended by course as a lerning chalnage, but with out gui
 - More realistic error and confirmation messages
  
 
-License
+### License
 This project is based on Jonas Schmedtmann's Mapty project.
