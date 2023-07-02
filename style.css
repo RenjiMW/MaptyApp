@@ -311,14 +311,15 @@ a:visited {
   display: none;
   position: absolute;
   z-index: 410;
-  left: 50%;
-  top: 50%;
-  background-color: orange;
+  left: calc(50% - 181px);
+  top: calc(50% - 62.5px);
+  background-image: linear-gradient(130deg, #ff7f50, orange);
   text-align: center;
   color: black;
   font-size: 2em;
   font-weight: bold;
   border: solid 2px black;
+  border-radius: 5px;
   padding: 10px;
 }
 
